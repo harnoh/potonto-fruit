@@ -173,12 +173,36 @@ function initGame() {
     const crownRadius = Math.min(width, height) * 0.25;
 
     for (let i = 0; i < APPLE_COUNT; i++) {
-        // Random position within the tree crown approximation
-        const angle = Math.random() * Math.PI * 2;
-        const r = Math.sqrt(Math.random()) * crownRadius; // Uniform distribution
-        const x = treeCenterX + r * Math.cos(angle);
-        const y = treeCenterY + r * Math.sin(angle);
+        let x, y, validPosition = false;
+        let attempts = 0;
 
+        while (!validPosition && attempts < 100) {
+            // Random position within the tree crown approximation
+            const angle = Math.random() * Math.PI * 2;
+            const r = Math.sqrt(Math.random()) * crownRadius; // Uniform distribution
+            x = treeCenterX + r * Math.cos(angle);
+            y = treeCenterY + r * Math.sin(angle);
+
+            // Check distance from all existing apples
+            let overlap = false;
+            for (const existingApple of apples) {
+                const dx = x - existingApple.x;
+                const dy = y - existingApple.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < existingApple.radius * 2 + 10) { // Radius * 2 + padding
+                    overlap = true;
+                    break;
+                }
+            }
+
+            if (!overlap) {
+                validPosition = true;
+            }
+            attempts++;
+        }
+
+        // If we couldn't find a spot after 100 tries, just place it anyway or skip?
+        // Let's place it to ensure count is correct, overlap is better than missing apple.
         apples.push(new Apple(x, y));
     }
 }
