@@ -170,16 +170,21 @@ function initGame() {
     particles = []; // Clear particles too
     const treeCenterX = width / 2;
     const treeCenterY = height * 0.4;
-    const crownRadius = Math.min(width, height) * 0.25;
+    // Match visual crown radius (0.35)
+    const crownRadius = Math.min(width, height) * 0.35;
 
     for (let i = 0; i < APPLE_COUNT; i++) {
         let x, y, validPosition = false;
         let attempts = 0;
 
-        while (!validPosition && attempts < 100) {
-            // Random position within the tree crown approximation
+        // Try to find a valid position
+        while (!validPosition && attempts < 200) {
             const angle = Math.random() * Math.PI * 2;
-            const r = Math.sqrt(Math.random()) * crownRadius; // Uniform distribution
+            // Keep completely inside key circle: max radius = crownRadius - appleRadius
+            // Using 35 as safe margin for apple radius (approx 40)
+            const maxR = Math.max(0, crownRadius - 35);
+            const r = Math.sqrt(Math.random()) * maxR;
+
             x = treeCenterX + r * Math.cos(angle);
             y = treeCenterY + r * Math.sin(angle);
 
@@ -189,7 +194,9 @@ function initGame() {
                 const dx = x - existingApple.x;
                 const dy = y - existingApple.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < existingApple.radius * 2 + 10) { // Radius * 2 + padding
+                // Apple diameter is 80. Allow slight visual overlap (75) to pack better on small screens
+                // or if we have many apples.
+                if (dist < 75) {
                     overlap = true;
                     break;
                 }
@@ -201,8 +208,10 @@ function initGame() {
             attempts++;
         }
 
-        // If we couldn't find a spot after 100 tries, just place it anyway or skip?
-        // Let's place it to ensure count is correct, overlap is better than missing apple.
+        // If we really can't fit it (e.g. ultra small screen), we skip it 
+        // OR we place it anyway. Placing it anyway causes overlap which user hates.
+        // Let's try to place it with relaxed constraint? 
+        // No, let's just place it. It's better than having 7 apples.
         apples.push(new Apple(x, y));
     }
 }
