@@ -41,8 +41,9 @@ function playTone(freq, type, duration) {
 }
 
 // Game State
-const APPLE_COUNT = 8;
+const FRUIT_COUNT = 8;
 let resetTimer = null;
+let currentFruitType = 'apple'; // 'apple', 'mikan', 'banana'
 
 class Particle {
     constructor(x, y, color) {
@@ -75,10 +76,11 @@ class Particle {
     }
 }
 
-class Apple {
-    constructor(x, y) {
+class Fruit {
+    constructor(x, y, type) {
         this.x = x;
         this.y = y;
+        this.type = type;
         this.vx = 0;
         this.vy = 0;
         this.radius = 40; // Visual radius
@@ -86,7 +88,16 @@ class Apple {
         this.isFalling = false;
         this.rotation = 0;
         this.angularVelocity = 0;
-        this.color = '#FF4444'; // Red
+
+        // Settings based on type
+        if (this.type === 'apple') {
+            this.color = '#FF4444'; // Red
+        } else if (this.type === 'mikan') {
+            this.color = '#FF8C00'; // Dark Orange
+        } else if (this.type === 'banana') {
+            this.color = '#FFE135'; // Banana Yellow
+        }
+
         // Random initial sway for "hanging" effect (visual only for now)
         this.swayOffset = Math.random() * Math.PI * 2;
     }
@@ -142,21 +153,50 @@ class Apple {
         // ctx.strokeStyle = 'rgba(0,0,0,0.2)';
         // ctx.stroke();
 
-        // Draw Apple Body
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-        ctx.fill();
+        if (this.type === 'banana') {
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            // Draw a crescent
+            ctx.arc(0, -this.radius * 0.5, this.radius, 0.1 * Math.PI, 0.9 * Math.PI);
+            ctx.quadraticCurveTo(0, this.radius * 0.5, this.radius * Math.cos(0.1 * Math.PI), -this.radius * 0.5 + this.radius * Math.sin(0.1 * Math.PI));
+            ctx.fill();
 
-        // Draw Highlight
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.beginPath();
-        ctx.arc(-this.radius * 0.3, -this.radius * 0.3, this.radius * 0.2, 0, Math.PI * 2);
-        ctx.fill();
+            // Stem
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(-5, -this.radius * 1.2, 10, 15);
 
-        // Draw Stem
-        ctx.fillStyle = '#654321';
-        ctx.fillRect(-2, -this.radius - 8, 4, 10);
+        } else {
+            // Apple or Mikan (Round)
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            if (this.type === 'mikan') {
+                // Slightly oblate for mikan?
+                ctx.ellipse(0, 0, this.radius, this.radius * 0.85, 0, 0, Math.PI * 2);
+            } else {
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+            }
+            ctx.fill();
+
+            // Highlight
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.beginPath();
+            ctx.arc(-this.radius * 0.3, -this.radius * 0.3, this.radius * 0.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Mikan dots (pores)
+            if (this.type === 'mikan') {
+                ctx.fillStyle = 'rgba(200, 100, 0, 0.3)';
+                for (let i = 0; i < 5; i++) {
+                    ctx.beginPath();
+                    ctx.arc((Math.random() - 0.5) * this.radius, (Math.random() - 0.5) * this.radius, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Stem (Green for Mikan, Brown for Apple)
+            ctx.fillStyle = this.type === 'mikan' ? '#228B22' : '#654321';
+            ctx.fillRect(-2, -this.radius - 8, 4, 10);
+        }
 
         ctx.restore();
     }
@@ -166,14 +206,18 @@ function initGame() {
     if (resetTimer) clearTimeout(resetTimer);
     resetTimer = null;
 
-    apples = [];
+    fruits = [];
     particles = []; // Clear particles too
     const treeCenterX = width / 2;
     const treeCenterY = height * 0.4;
     // Match visual crown radius (0.35)
     const crownRadius = Math.min(width, height) * 0.35;
 
-    for (let i = 0; i < APPLE_COUNT; i++) {
+    // Pick random fruit type
+    const types = ['apple', 'mikan', 'banana'];
+    currentFruitType = types[Math.floor(Math.random() * types.length)];
+
+    for (let i = 0; i < FRUIT_COUNT; i++) {
         let x, y, validPosition = false;
         let attempts = 0;
 
@@ -188,11 +232,11 @@ function initGame() {
             x = treeCenterX + r * Math.cos(angle);
             y = treeCenterY + r * Math.sin(angle);
 
-            // Check distance from all existing apples
+            // Check distance from all existing fruits
             let overlap = false;
-            for (const existingApple of apples) {
-                const dx = x - existingApple.x;
-                const dy = y - existingApple.y;
+            for (const existingFruit of fruits) {
+                const dx = x - existingFruit.x;
+                const dy = y - existingFruit.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 // Apple diameter is 80. Allow slight visual overlap (75) to pack better on small screens
                 // or if we have many apples.
@@ -208,11 +252,7 @@ function initGame() {
             attempts++;
         }
 
-        // If we really can't fit it (e.g. ultra small screen), we skip it 
-        // OR we place it anyway. Placing it anyway causes overlap which user hates.
-        // Let's try to place it with relaxed constraint? 
-        // No, let's just place it. It's better than having 7 apples.
-        apples.push(new Apple(x, y));
+        fruits.push(new Fruit(x, y, currentFruitType));
     }
 }
 
@@ -271,10 +311,10 @@ function loop() {
 
     drawTree();
 
-    // Update and Draw Apples
-    apples.forEach(apple => {
-        apple.update();
-        apple.draw(ctx);
+    // Update and Draw Fruits
+    fruits.forEach(fruit => {
+        fruit.update();
+        fruit.draw(ctx);
     });
 
     // Update and Draw Particles
@@ -296,40 +336,35 @@ function resize() {
     canvas.width = width;
     canvas.height = height;
 
-    // Re-initialize apples only if empty or significant resize? 
-    // For now, let's keep them if possible, but positions might be off.
-    // Simpler to re-init on major resize for this prototype, 
-    // but better to just adjust ground level.
-    // Let's re-init for now to ensure they stay on tree.
     initGame();
 }
 
 // Input Handling
 function handleInput(x, y) {
-    // Check collision with apples in reverse order (topmost first)
-    for (let i = apples.length - 1; i >= 0; i--) {
-        const apple = apples[i];
-        if (apple.isFalling) continue; // Already falling
+    // Check collision with fruits in reverse order (topmost first)
+    for (let i = fruits.length - 1; i >= 0; i--) {
+        const fruit = fruits[i];
+        if (fruit.isFalling) continue; // Already falling
 
-        const dx = x - apple.x;
-        const dy = y - apple.y;
+        const dx = x - fruit.x;
+        const dy = y - fruit.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (dist < apple.hitRadius) {
-            apple.isFalling = true;
+        if (dist < fruit.hitRadius) {
+            fruit.isFalling = true;
             // Add slight randomness to fall
-            apple.vx = (Math.random() - 0.5) * 2;
-            apple.angularVelocity = (Math.random() - 0.5) * 0.1;
+            fruit.vx = (Math.random() - 0.5) * 2;
+            fruit.angularVelocity = (Math.random() - 0.5) * 0.1;
 
             sounds.tap();
 
             // Spawn leaves
             for (let j = 0; j < 5; j++) {
-                particles.push(new Particle(apple.x, apple.y - 10, '#228B22'));
+                particles.push(new Particle(fruit.x, fruit.y - 10, '#228B22'));
             }
 
-            // Check if all apples have fallen
-            if (apples.every(a => a.isFalling)) {
+            // Check if all fruits have fallen
+            if (fruits.every(f => f.isFalling)) {
                 if (resetTimer) clearTimeout(resetTimer);
                 resetTimer = setTimeout(() => {
                     initGame();
@@ -337,7 +372,7 @@ function handleInput(x, y) {
                 }, 10000); // 10 seconds
             }
 
-            break; // Only trigger one apple per tap
+            break; // Only trigger one fruit per tap
         }
     }
 }
