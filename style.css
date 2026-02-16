@@ -1,0 +1,52 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #87CEEB; /* Sky Blue */
+    font-family: 'Hiragino Maru Gothic Pro', 'Rounded Mplus 1c', sans-serif;
+}
+
+#game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#resetButton {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    font-size: 1.2rem;
+    background-color: #FFF;
+    border: 2px solid #333;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    user-select: none;
+}
+
+#resetButton:active {
+    transform: translateY(2px);
+    box-shadow: none;
+}
+
+#instruction {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    text-align: center;
+    font-size: 1.5rem;
+    color: #333;
+    text-shadow: 1px 1px 0 #FFF;
+    pointer-events: none; /* Let taps pass through to canvas */
+    user-select: none;
+}
