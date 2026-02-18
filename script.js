@@ -76,6 +76,9 @@ class Particle {
     }
 }
 
+const bananaImg = new Image();
+bananaImg.src = 'banana.png';
+
 class Fruit {
     constructor(x, y, type) {
         this.x = x;
@@ -95,7 +98,7 @@ class Fruit {
         } else if (this.type === 'mikan') {
             this.color = '#FF8C00'; // Dark Orange
         } else if (this.type === 'banana') {
-            this.color = '#FFE135'; // Banana Yellow
+            this.color = '#FFE135'; // Banana Yellow (fallback)
         }
 
         // Random initial sway for "hanging" effect (visual only for now)
@@ -147,81 +150,19 @@ class Fruit {
         ctx.translate(this.x, this.y);
         ctx.rotate(this.rotation);
 
-        if (this.type === 'banana') {
-            // Draw a bunch of 3 bananas
-            // Styles
-            ctx.fillStyle = '#FFE135'; // Banana Yellow
-            ctx.strokeStyle = '#5C3317'; // Dark Brown Outline
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-
-            const drawSingleBanana = (offsetX, offsetY, angle, scale) => {
-                ctx.save();
-                ctx.translate(offsetX, offsetY);
-                ctx.rotate(angle);
-                ctx.scale(scale, scale);
-
+        if (this.type === 'banana' && bananaImg.complete) {
+            // Draw Banana Image
+            // Aspect ratio might be important but we'll fit to radius box approx
+            const size = this.radius * 2.5; // Slightly larger visually
+            try {
+                ctx.drawImage(bananaImg, -size / 2, -size / 2, size, size);
+            } catch (e) {
+                // Fallback if image fails or not really loaded
+                ctx.fillStyle = this.color;
                 ctx.beginPath();
-                // Banana shape
-                ctx.moveTo(-20, -10);
-                ctx.quadraticCurveTo(0, 10, 20, -10); // Bottom curve
-                ctx.quadraticCurveTo(0, -5, -20, -10); // Top curve
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.stroke();
-
-                // Tip
-                ctx.fillStyle = '#5C3317';
-                ctx.beginPath();
-                ctx.arc(20, -10, 2, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Restore yellow for next fill
-                ctx.fillStyle = '#FFE135';
-
-                // Inner line details
-                ctx.beginPath();
-                ctx.moveTo(-15, -8);
-                ctx.quadraticCurveTo(0, 5, 15, -8);
-                ctx.stroke();
-
-                ctx.restore();
-            };
-
-            // Stem (Shared base)
-            ctx.fillStyle = '#FFE135';
-            ctx.beginPath();
-            ctx.rect(-10, -25, 20, 10);
-            ctx.fill();
-            ctx.stroke();
-
-            // Draw 3 bananas fanned out
-            // Banana 1 (Bottom/Left)
-            drawSingleBanana(-5, 5, Math.PI / 4, 1.0);
-            // Banana 2 (Bottom/Right)
-            drawSingleBanana(5, 5, -Math.PI / 8, 1.0);
-            // Banana 3 (Top/Center - drawn last to be in front? or first to be back? Let's stack them)
-            // Actually, the reference has them stacked vertically somewhat.
-            // Let's try simple fanning.
-
-            // Redrawing with better layering based on reference (Top one, then two below)
-            // Reference: One top-ish, two below it.
-
-            // Actually, the reference image is 3 bananas aligned.
-            // Let's simplify: 3 bananas stacked.
-
-            // Bottom
-            drawSingleBanana(0, 10, 0.2, 1);
-            // Middle
-            drawSingleBanana(0, 0, 0.1, 1);
-            // Top
-            drawSingleBanana(0, -10, 0, 1);
-
-            // Main Stem cap
-            ctx.fillStyle = '#5C3317';
-            ctx.beginPath();
-            ctx.rect(-8, -22, 16, 6);
-            ctx.fill();
+            }
 
         } else {
             // Apple or Mikan (Round)
@@ -241,7 +182,7 @@ class Fruit {
             ctx.arc(-this.radius * 0.3, -this.radius * 0.3, this.radius * 0.2, 0, Math.PI * 2);
             ctx.fill();
 
-            // Mikan dots (pores) - texturing removed per user request
+            // Mikan dots removed
 
             // Stem
             ctx.fillStyle = '#654321';
@@ -272,7 +213,7 @@ function initGame() {
     const crownRadius = Math.min(width, height) * 0.35;
 
     // Pick random fruit type
-    const types = ['apple', 'mikan']; // Banana removed
+    const types = ['apple', 'mikan', 'banana']; // Re-added banana
     currentFruitType = types[Math.floor(Math.random() * types.length)];
 
     for (let i = 0; i < FRUIT_COUNT; i++) {
