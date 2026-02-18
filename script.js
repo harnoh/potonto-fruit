@@ -147,55 +147,73 @@ class Fruit {
         ctx.translate(this.x, this.y);
         ctx.rotate(this.rotation);
 
-        // Debug Hit Area (uncomment to see)
-        // ctx.beginPath();
-        // ctx.arc(0, 0, this.hitRadius, 0, Math.PI * 2);
-        // ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-        // ctx.stroke();
-
         if (this.type === 'banana') {
+            // Banana - Main Body
             ctx.fillStyle = this.color;
             ctx.beginPath();
-            // Draw a crescent
-            ctx.arc(0, -this.radius * 0.5, this.radius, 0.1 * Math.PI, 0.9 * Math.PI);
-            ctx.quadraticCurveTo(0, this.radius * 0.5, this.radius * Math.cos(0.1 * Math.PI), -this.radius * 0.5 + this.radius * Math.sin(0.1 * Math.PI));
+            // Draw a more natural curved banana shape using bezier curves
+            ctx.moveTo(-this.radius * 0.8, -this.radius * 0.4);
+            ctx.quadraticCurveTo(0, -this.radius * 1.2, this.radius * 0.8, -this.radius * 0.4);
+            ctx.quadraticCurveTo(0, this.radius * 0.8, -this.radius * 0.8, -this.radius * 0.4);
             ctx.fill();
 
+            // Ridge for 3D effect
+            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-this.radius * 0.7, -this.radius * 0.35);
+            ctx.quadraticCurveTo(0, this.radius * 0.4, this.radius * 0.7, -this.radius * 0.35);
+            ctx.stroke();
+
             // Stem
+            ctx.fillStyle = '#654321'; // Brown
+            ctx.fillRect(-this.radius * 0.9, -this.radius * 0.5, 6, 8);
+
+            // Tip (brown spot)
             ctx.fillStyle = '#654321';
-            ctx.fillRect(-5, -this.radius * 1.2, 10, 15);
+            ctx.beginPath();
+            ctx.arc(this.radius * 0.8, -this.radius * 0.4, 3, 0, Math.PI * 2);
+            ctx.fill();
 
         } else {
             // Apple or Mikan (Round)
             ctx.fillStyle = this.color;
             ctx.beginPath();
             if (this.type === 'mikan') {
-                // Slightly oblate for mikan?
+                // Slightly oblate
                 ctx.ellipse(0, 0, this.radius, this.radius * 0.85, 0, 0, Math.PI * 2);
             } else {
                 ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
             }
             ctx.fill();
 
-            // Highlight
+            // Highlight (Gloss)
             ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
             ctx.beginPath();
             ctx.arc(-this.radius * 0.3, -this.radius * 0.3, this.radius * 0.2, 0, Math.PI * 2);
             ctx.fill();
 
-            // Mikan dots (pores)
             if (this.type === 'mikan') {
-                ctx.fillStyle = 'rgba(200, 100, 0, 0.3)';
-                for (let i = 0; i < 5; i++) {
+                // Mikan dots (pores) - texturing
+                ctx.fillStyle = 'rgba(200, 100, 0, 0.4)';
+                for (let i = 0; i < 8; i++) {
                     ctx.beginPath();
-                    ctx.arc((Math.random() - 0.5) * this.radius, (Math.random() - 0.5) * this.radius, 2, 0, Math.PI * 2);
+                    ctx.arc((Math.random() - 0.5) * this.radius * 1.2, (Math.random() - 0.5) * this.radius * 1.0, 1.5, 0, Math.PI * 2);
                     ctx.fill();
                 }
             }
 
-            // Stem (Green for Mikan, Brown for Apple)
-            ctx.fillStyle = this.type === 'mikan' ? '#228B22' : '#654321';
-            ctx.fillRect(-2, -this.radius - 8, 4, 10);
+            // Stem
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(-2, -this.radius * (this.type === 'mikan' ? 0.8 : 1.0) - 8, 4, 10);
+
+            // Leaf for Mikan (Green)
+            if (this.type === 'mikan') {
+                ctx.fillStyle = '#228B22';
+                ctx.beginPath();
+                ctx.ellipse(5, -this.radius - 8, 8, 4, Math.PI / 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
 
         ctx.restore();
