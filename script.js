@@ -148,31 +148,79 @@ class Fruit {
         ctx.rotate(this.rotation);
 
         if (this.type === 'banana') {
-            // Banana - Main Body
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            // Draw a more natural curved banana shape using bezier curves
-            ctx.moveTo(-this.radius * 0.8, -this.radius * 0.4);
-            ctx.quadraticCurveTo(0, -this.radius * 1.2, this.radius * 0.8, -this.radius * 0.4);
-            ctx.quadraticCurveTo(0, this.radius * 0.8, -this.radius * 0.8, -this.radius * 0.4);
-            ctx.fill();
-
-            // Ridge for 3D effect
-            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            // Draw a bunch of 3 bananas
+            // Styles
+            ctx.fillStyle = '#FFE135'; // Banana Yellow
+            ctx.strokeStyle = '#5C3317'; // Dark Brown Outline
             ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            const drawSingleBanana = (offsetX, offsetY, angle, scale) => {
+                ctx.save();
+                ctx.translate(offsetX, offsetY);
+                ctx.rotate(angle);
+                ctx.scale(scale, scale);
+
+                ctx.beginPath();
+                // Banana shape
+                ctx.moveTo(-20, -10);
+                ctx.quadraticCurveTo(0, 10, 20, -10); // Bottom curve
+                ctx.quadraticCurveTo(0, -5, -20, -10); // Top curve
+                ctx.fill();
+                ctx.stroke();
+
+                // Tip
+                ctx.fillStyle = '#5C3317';
+                ctx.beginPath();
+                ctx.arc(20, -10, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Restore yellow for next fill
+                ctx.fillStyle = '#FFE135';
+
+                // Inner line details
+                ctx.beginPath();
+                ctx.moveTo(-15, -8);
+                ctx.quadraticCurveTo(0, 5, 15, -8);
+                ctx.stroke();
+
+                ctx.restore();
+            };
+
+            // Stem (Shared base)
+            ctx.fillStyle = '#FFE135';
             ctx.beginPath();
-            ctx.moveTo(-this.radius * 0.7, -this.radius * 0.35);
-            ctx.quadraticCurveTo(0, this.radius * 0.4, this.radius * 0.7, -this.radius * 0.35);
+            ctx.rect(-10, -25, 20, 10);
+            ctx.fill();
             ctx.stroke();
 
-            // Stem
-            ctx.fillStyle = '#654321'; // Brown
-            ctx.fillRect(-this.radius * 0.9, -this.radius * 0.5, 6, 8);
+            // Draw 3 bananas fanned out
+            // Banana 1 (Bottom/Left)
+            drawSingleBanana(-5, 5, Math.PI / 4, 1.0);
+            // Banana 2 (Bottom/Right)
+            drawSingleBanana(5, 5, -Math.PI / 8, 1.0);
+            // Banana 3 (Top/Center - drawn last to be in front? or first to be back? Let's stack them)
+            // Actually, the reference has them stacked vertically somewhat.
+            // Let's try simple fanning.
 
-            // Tip (brown spot)
-            ctx.fillStyle = '#654321';
+            // Redrawing with better layering based on reference (Top one, then two below)
+            // Reference: One top-ish, two below it.
+
+            // Actually, the reference image is 3 bananas aligned.
+            // Let's simplify: 3 bananas stacked.
+
+            // Bottom
+            drawSingleBanana(0, 10, 0.2, 1);
+            // Middle
+            drawSingleBanana(0, 0, 0.1, 1);
+            // Top
+            drawSingleBanana(0, -10, 0, 1);
+
+            // Main Stem cap
+            ctx.fillStyle = '#5C3317';
             ctx.beginPath();
-            ctx.arc(this.radius * 0.8, -this.radius * 0.4, 3, 0, Math.PI * 2);
+            ctx.rect(-8, -22, 16, 6);
             ctx.fill();
 
         } else {
