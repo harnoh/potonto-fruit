@@ -241,15 +241,7 @@ class Fruit {
             ctx.arc(-this.radius * 0.3, -this.radius * 0.3, this.radius * 0.2, 0, Math.PI * 2);
             ctx.fill();
 
-            if (this.type === 'mikan') {
-                // Mikan dots (pores) - texturing
-                ctx.fillStyle = 'rgba(200, 100, 0, 0.4)';
-                for (let i = 0; i < 8; i++) {
-                    ctx.beginPath();
-                    ctx.arc((Math.random() - 0.5) * this.radius * 1.2, (Math.random() - 0.5) * this.radius * 1.0, 1.5, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
+            // Mikan dots (pores) - texturing removed per user request
 
             // Stem
             ctx.fillStyle = '#654321';
@@ -280,7 +272,7 @@ function initGame() {
     const crownRadius = Math.min(width, height) * 0.35;
 
     // Pick random fruit type
-    const types = ['apple', 'mikan', 'banana'];
+    const types = ['apple', 'mikan']; // Banana removed
     currentFruitType = types[Math.floor(Math.random() * types.length)];
 
     for (let i = 0; i < FRUIT_COUNT; i++) {
